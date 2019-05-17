@@ -1,0 +1,20 @@
+{
+  "name": "fix-sketch-files",
+  "version": "1.0.0",
+  "description": "",
+  "main": "fix-file.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "pkg": "webpack fix-file.js -o dist/fix-file.js --target=node"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^8.0.1",
+    "ora": "^3.4.0"
+  },
+  "devDependencies": {
+    "webpack": "^4.31.0",
+    "webpack-cli": "^3.3.2"
+  }
+}
