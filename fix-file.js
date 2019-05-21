@@ -38,6 +38,8 @@ fs.rename(file, corruptedFile).then(() => {
   return fs.stat(corruptedFile)
 }).then(stat => {
   if (stat.isDirectory()) {
+    logs.stderr += '\n\n-----------------\n\n'
+    logs.stdout += 'It\'s a folder with a `.sketch` extension at the end\n\n-----------------\n\n'
     return fs.copy(corruptedFile, zipFolder, {recursive: true})
   }
 
