@@ -35,29 +35,36 @@ const spinner = ora(`Renaming ${file} to ${corruptedFile}`).start()
 
 fs.rename(file, corruptedFile).then(() => {
   spinner.succeed(`Renamed ${file} to ${corruptedFile}`)
+  return fs.stat(corruptedFile)
+}).then(stat => {
+  if (stat.isDirectory()) {
+    return fs.copy(corruptedFile, zipFolder, {recursive: true})
+  }
+
   spinner.text = 'Fixing the archive'
 
-  return exec(`yes | zip -FF "${corruptedFile}" --out="${zipFile}"`)
-}).then(({stderr, stdout}) => {
-  logs.stderr += stderr + '\n\n-----------------\n\n'
-  logs.stdout += stdout + '\n\n-----------------\n\n'
+  return exec(`yes | zip -FF "${corruptedFile}" --out="${zipFile}"`).then(({stderr, stdout}) => {
+    logs.stderr += stderr + '\n\n-----------------\n\n'
+    logs.stdout += stdout + '\n\n-----------------\n\n'
 
-  spinner.succeed('Fixed the archive')
-  spinner.text = "Unzipping the archive"
+    spinner.succeed('Fixed the archive')
+    spinner.text = "Unzipping the archive"
 
-  return exec(`unzip "${zipFile}" -d "${zipFolder}"`).catch(err => {
-    // we know it's going to failed but if we managed to create a folder,
-    // then we are just going to continue
-    if (fs.existsSync(zipFolder)) {
-      return {stdout: err.stdout, stderr: err.stderr}
-    }
-    throw err
+    return exec(`unzip "${zipFile}" -d "${zipFolder}"`).catch(err => {
+      // we know it's going to failed but if we managed to create a folder,
+      // then we are just going to continue
+      if (fs.existsSync(zipFolder)) {
+        return {stdout: err.stdout, stderr: err.stderr}
+      }
+      throw err
+    })
+  }).then(({stderr, stdout}) => {
+    logs.stderr += stderr + '\n\n-----------------\n\n'
+    logs.stdout += stdout + '\n\n-----------------\n\n'
+
+    spinner.succeed("Unzipped the archive")
   })
-}).then(({stderr, stdout}) => {
-  logs.stderr += stderr + '\n\n-----------------\n\n'
-  logs.stdout += stdout + '\n\n-----------------\n\n'
-
-  spinner.succeed("Unzipped the archive")
+}).then(() => {
   spinner.text = "Looking for missing files and adding them back if possible"
 
   return Promise.all([
